@@ -60,10 +60,7 @@ export default {
         return new Response("Method Not Allowed", { status: 405 });
       }
 
-      const { sessionId, message } = await request.json<{
-        sessionId: string;
-        message: string;
-      }>();
+      const { sessionId, message } = await request.json();
 
       if (!sessionId || !message) {
         return Response.json({ error: "Missing sessionId or message" }, { status: 400 });
@@ -81,12 +78,18 @@ export default {
           { role: "system", content: SYSTEM_PROMPT },
           ...memory.conversation
         ];
-        const response = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
-          messages
-        });
-        // Cloudflare Workers AI returns { response: string }
-        const reply = (response as any).response;
-        return reply;
+
+        const ai = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", { messages });
+
+        const reply = (ai as any).response;
+
+        // Save memory
+        memory.conversation.push({ role: "assistant", content: reply });
+        await saveMemory(env, sessionId, memory);
+
+        // ⭐ THIS IS THE FIX ⭐
+        return Response.json({ reply });
+
       } catch (error) {
         console.error(error);
         return Response.json({ error: "Internal server error" }, { status: 500 });
