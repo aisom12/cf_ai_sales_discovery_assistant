@@ -6,9 +6,40 @@ interface Env {
   SALES_WORKFLOW: Workflow;
 }
 
+const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sales Discovery Assistant</title>
+</head>
+<body>
+  <h1>Sales Chat</h1>
+  <div id="chat"></div>
+  <input id="message" type="text" placeholder="Type your message">
+  <button onclick="sendMessage()">Send</button>
+  <script>
+    const sessionId = 'test-session'; // Or generate dynamically
+    async function sendMessage() {
+      const message = document.getElementById('message').value;
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, message })
+      });
+      const data = await response.json();
+      document.getElementById('chat').innerHTML += \`<p>You: \${message}</p><p>Assistant: \${data.reply}</p>\`;
+    }
+  </script>
+</body>
+</html>`;
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname === "/" && request.method === "GET") {
+      return new Response(html, { headers: { "Content-Type": "text/html" } });
+    }
 
     // Serve API route
     if (url.pathname === "/api/chat") {

@@ -14,6 +14,3 @@ kv_namespaces = [
 workflows = [
   { binding = "SALES_WORKFLOW", class_name = "SalesWorkflow" }
 ]
-
-[site]
-bucket = "public"
