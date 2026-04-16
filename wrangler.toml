@@ -15,5 +15,5 @@ workflows = [
   { binding = "SALES_WORKFLOW", class_name = "SalesWorkflow" }
 ]
 
-[pages]
+[site]
 directory = "public"
