@@ -48,8 +48,10 @@ export class SalesWorkflow extends WorkflowEntrypoint<Env, WorkflowInput> {
       ];
       const response = await this.env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
         messages
-      }) as { response: string };  // Added type assertion
-      return response.response;
+      });
+      console.log("AI raw response:", response);  // Added here
+      const typedResponse = response as { response: string };
+      return typedResponse.response;
     });
 
     // Step 4: Add assistant reply to conversation
@@ -63,3 +65,4 @@ export class SalesWorkflow extends WorkflowEntrypoint<Env, WorkflowInput> {
     return { reply };
   }
 }
+

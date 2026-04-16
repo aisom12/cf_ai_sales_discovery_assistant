@@ -81,18 +81,12 @@ export default {
           { role: "system", content: SYSTEM_PROMPT },
           ...memory.conversation
         ];
-        const aiResponse = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
+        const response = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
           messages
-        }) as { response: string };
-        const reply = aiResponse.response;
-
-        // Add assistant reply
-        memory.conversation.push({ role: "assistant", content: reply });
-
-        // Save memory
-        await saveMemory(env, sessionId, memory);
-
-        return Response.json({ reply });
+        });
+        // Cloudflare Workers AI returns { response: string }
+        const reply = (response as any).response;
+        return reply;
       } catch (error) {
         console.error(error);
         return Response.json({ error: "Internal server error" }, { status: 500 });

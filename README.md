@@ -1,58 +1,44 @@
-# cf_ai_sales_discovery_assistant
+# CF AI Sales Discovery Assistant
 
-An AI-powered B2B sales discovery assistant built entirely on Cloudflare's AI-native stack. It guides sales reps through structured discovery conversations — surfacing pain points, budget signals, objections, and next steps — with full conversation memory per session.
+An AI-powered B2B sales discovery assistant built on Cloudflare Workers, using Llama 3.3 for intelligent conversation and KV for session memory.
 
-## Live demo
+## Features
+- Real-time chat interface for sales discovery calls
+- AI-powered responses using Llama 3.3 70B model
+- Persistent conversation memory via Workers KV
+- Structured prospect data tracking
 
-Deploy with `npm run deploy` and open the generated `*.workers.dev` URL.
+## Setup
 
-## Architecture
-
-```
-Browser (HTML/CSS/JS)
-       │  POST /api/chat
-       ▼
-Worker (index.ts)
-       │  triggers
-       ▼
-Cloudflare Workflow (SalesWorkflow)
-       ├── Step 1: Load history  → KV
-       ├── Step 2: Call LLM      → Workers AI (Llama 3.3 70B)
-       └── Step 3: Save history  → KV
-```
-
-| Component | Cloudflare product |
-|---|---|
-| LLM | Workers AI — `@cf/meta/llama-3.3-70b-instruct-fp8-fast` |
-| Workflow / coordination | Cloudflare Workflows |
-| Memory / state | KV Namespace (keyed by session UUID) |
-| Frontend | Static assets via Workers Assets |
-
-## Prerequisites
-
+### Prerequisites
 - Node.js 18+
-- A free Cloudflare account
+- Wrangler CLI: `npm install -g wrangler`
 
-## Setup & running locally
-
+### Installation
 ```bash
-# 1. Install dependencies
+git clone <your-repo>
+cd cf_ai_sales_discovery_assistant
+npm install
+```
+
+## Running Locally
+
+### Step 1: Install Dependencies
 npm install
 
-# 2. Log in to Cloudflare
+### Step 2: Log in to Cloudflare
 npx wrangler login
 
-# 3. Create KV namespaces
+### Step 3: Create KV Namespaces
 npx wrangler kv namespace create SALES_KV
 npx wrangler kv namespace create SALES_KV --preview
 
-# 4. Paste the IDs printed above into wrangler.toml
+### Step 4: Paste the IDs printed above into wrangler.toml
 #    kv_namespaces = [{ binding = "SALES_KV", id = "...", preview_id = "..." }]
 
-# 5. Run locally
+### Step 5: Run Locally
 npm run dev
 # Open http://localhost:8787
-```
 
 ## Deploy
 
@@ -62,7 +48,7 @@ npm run deploy
 
 Wrangler prints a live `*.workers.dev` URL when done.
 
-## Project structure
+## Project Structure
 
 ```
 cf_ai_sales_discovery_assistant/
