@@ -13,7 +13,7 @@
     const sessionId = 'test-session'; // Or generate dynamically
     async function sendMessage() {
       const message = document.getElementById('message').value;
-      const response = await fetch('/', {
+      const response = await fetch('/api/chat', {  // Changed from '/' to '/api/chat'
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, message })
