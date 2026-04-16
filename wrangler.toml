@@ -16,4 +16,4 @@ workflows = [
 ]
 
 [site]
-directory = "public"
+bucket = "public"
