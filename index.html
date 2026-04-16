@@ -1,0 +1,83 @@
+const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sales Discovery Assistant</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    #chat p {
+      margin: 6px 0;
+    }
+
+    /* Loading Spinner */
+    #loading {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 3px solid #ccc;
+      border-top-color: #4a90e2;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 8px 0;
+    }
+
+    .loading-text {
+      color: gray;
+      font-style: italic;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Sales Chat</h1>
+
+  <div id="chat"></div>
+
+  <!-- Loading Spinner -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p class="loading-text">Assistant is thinking...</p>
+  </div>
+
+  <input id="message" type="text" placeholder="Type your message">
+  <button onclick="sendMessage()">Send</button>
+
+  <script>
+    const sessionId = "test-session";
+
+    async function sendMessage() {
+      const message = document.getElementById("message").value;
+
+      // show loading spinner
+      document.getElementById("loading").style.display = "block";
+
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, message })
+      });
+
+      const data = await response.json();
+
+      // hide loading spinner
+      document.getElementById("loading").style.display = "none";
+
+      document.getElementById("chat").innerHTML += 
+        "<p>You: " + message + "</p><p>Assistant: " + data.reply + "</p>";
+    }
+  </script>
+</body>
+</html>
+`;
