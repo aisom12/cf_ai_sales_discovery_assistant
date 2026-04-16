@@ -1,10 +1,23 @@
-import { SalesWorkflow } from "./workflow";
+import { loadMemory, saveMemory } from "./memory";
 
-export { SalesWorkflow };
+export { SalesWorkflow } from "./workflow";  // Keep for export if deploying
 
 interface Env {
-  SALES_WORKFLOW: Workflow;
+  SALES_KV: KVNamespace;
+  AI: Ai;
 }
+
+const SYSTEM_PROMPT = `You are a B2B Sales Discovery Assistant helping a sales rep run an effective discovery call.
+
+Your responsibilities:
+- Ask targeted questions to uncover pain points, budget, timeline, and the decision-making process.
+- After the prospect responds, summarize what you've learned in a structured way.
+- Flag potential objections or risks you notice.
+- Suggest a concrete next step the sales rep should take.
+- Keep responses concise, consultative, and professional.
+- Never fabricate information — rely only on what has been shared in the conversation.
+
+Format: Respond naturally as the assistant. When you have enough information, end with a short "Suggested next step:" line.`;
 
 const html = `<!DOCTYPE html>
 <html lang="en">
@@ -56,22 +69,34 @@ export default {
         return Response.json({ error: "Missing sessionId or message" }, { status: 400 });
       }
 
-      const instance = await env.SALES_WORKFLOW.create({
-        params: { sessionId, message },
-      });
+      try {
+        // Load memory
+        const memory = await loadMemory(env, sessionId);
 
-      // Poll until the workflow step completes
-      let status = await instance.status();
-      while (status.status !== "complete" && status.status !== "errored") {
-        await new Promise((r) => setTimeout(r, 400));
-        status = await instance.status();
+        // Add user message
+        memory.conversation.push({ role: "user", content: message });
+
+        // Call AI
+        const messages = [
+          { role: "system", content: SYSTEM_PROMPT },
+          ...memory.conversation
+        ];
+        const aiResponse = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
+          messages
+        }) as { response: string };
+        const reply = aiResponse.response;
+
+        // Add assistant reply
+        memory.conversation.push({ role: "assistant", content: reply });
+
+        // Save memory
+        await saveMemory(env, sessionId, memory);
+
+        return Response.json({ reply });
+      } catch (error) {
+        console.error(error);
+        return Response.json({ error: "Internal server error" }, { status: 500 });
       }
-
-      if (status.status === "errored") {
-        return Response.json({ error: "Workflow failed" }, { status: 500 });
-      }
-
-      return Response.json(status.output);
     }
 
     return new Response("Not Found", { status: 404 });

@@ -18,4 +18,12 @@ declare module "cloudflare:workers" {
     env: Env;
     abstract run(event: WorkflowEvent<Input>, step: WorkflowStep): Promise<any>;
   }
+
+  export interface Workflow {
+    create(options: { params: any }): Promise<WorkflowInstance>;
+  }
+
+  export interface WorkflowInstance {
+    status(): Promise<{ status: string; output?: any }>;
+  }
 }
