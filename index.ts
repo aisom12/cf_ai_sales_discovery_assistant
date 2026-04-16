@@ -60,17 +60,17 @@ export default {
         return new Response("Method Not Allowed", { status: 405 });
       }
 
-      const { sessionId, message } = await request.json();
-
-      if (!sessionId || !message) {
-        return Response.json({ error: "Missing sessionId or message" }, { status: 400 });
-      }
-
       try {
         // Load memory
-        const memory = await loadMemory(env, sessionId);
+        const body = await request.json() as { sessionId: string; message: string };
+        const { sessionId, message } = body;
+
+        if (!sessionId || !message) {
+          return Response.json({ error: "Missing sessionId or message" }, { status: 400 });
+        }
 
         // Add user message
+        const memory = await loadMemory(env, sessionId);
         memory.conversation.push({ role: "user", content: message });
 
         // Call AI
@@ -87,7 +87,6 @@ export default {
         memory.conversation.push({ role: "assistant", content: reply });
         await saveMemory(env, sessionId, memory);
 
-        // ⭐ THIS IS THE FIX ⭐
         return Response.json({ reply });
 
       } catch (error) {
