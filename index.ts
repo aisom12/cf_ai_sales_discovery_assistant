@@ -1,7 +1,4 @@
 import { loadMemory, saveMemory } from "./memory";
-
-export { SalesWorkflow } from "./workflow";  // Keep for export if deploying
-
 interface Env {
   SALES_KV: KVNamespace;
   AI: Ai;
