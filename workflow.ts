@@ -23,41 +23,37 @@ interface WorkflowInput {
   message: string;
 }
 
-interface Memory {
-  conversation: { role: "user" | "assistant"; content: string }[];
-  prospect: Record<string, unknown>;
-}
-
 export class SalesWorkflow extends WorkflowEntrypoint<Env, WorkflowInput> {
   async run(event: WorkflowEvent<WorkflowInput>, step: WorkflowStep) {
     const { sessionId, message } = event.payload;
 
-    // Step 1: Load conversation history from KV
     const memory = await step.do("load-memory", async () => {
       return loadMemory(this.env, sessionId);
     });
 
-    // Step 2: Add user message to conversation
     memory.conversation.push({ role: "user", content: message });
 
-    // Step 3: Call Workers AI (Llama 3.3 70B)
     const reply = await step.do("call-llm", async () => {
       const messages = [
         { role: "system", content: SYSTEM_PROMPT },
         ...memory.conversation
       ];
-      const response = await this.env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
-        messages
-      });
-      console.log("AI raw response:", response);  // Added here
-      const typedResponse = response as { response: string };
-      return typedResponse.response;
+
+      const response = await this.env.AI.run("@cf/meta/llama-3.1-8b-instruct", { messages });
+
+      console.log("Workflow AI raw:", response);
+
+      return (
+        (response as any).response ||
+        (response as any).result?.response ||
+        (response as any).result ||
+        (response as any).output_text ||
+        "I'm here and ready to help!"
+      );
     });
 
-    // Step 4: Add assistant reply to conversation
     memory.conversation.push({ role: "assistant", content: reply });
 
-    // Step 5: Save updated conversation back to KV
     await step.do("save-memory", async () => {
       return saveMemory(this.env, sessionId, memory);
     });
@@ -65,4 +61,3 @@ export class SalesWorkflow extends WorkflowEntrypoint<Env, WorkflowInput> {
     return { reply };
   }
 }
-

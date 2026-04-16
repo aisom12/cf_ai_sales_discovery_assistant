@@ -1,7 +1,10 @@
 import { loadMemory, saveMemory } from "./memory";
+import { SalesWorkflow } from "./workflow";
+
 interface Env {
   SALES_KV: KVNamespace;
   AI: Ai;
+  SALES_WORKFLOW: any;
 }
 
 const SYSTEM_PROMPT = `You are a B2B Sales Discovery Assistant helping a sales rep run an effective discovery call.
@@ -28,7 +31,7 @@ const html = `<!DOCTYPE html>
   <input id="message" type="text" placeholder="Type your message">
   <button onclick="sendMessage()">Send</button>
   <script>
-    const sessionId = 'test-session'; // Or generate dynamically
+    const sessionId = 'test-session';
     async function sendMessage() {
       const message = document.getElementById('message').value;
       const response = await fetch('/api/chat', {
@@ -51,14 +54,12 @@ export default {
       return new Response(html, { headers: { "Content-Type": "text/html" } });
     }
 
-    // Serve API route
     if (url.pathname === "/api/chat") {
       if (request.method !== "POST") {
         return new Response("Method Not Allowed", { status: 405 });
       }
 
       try {
-        // Load memory
         const body = await request.json() as { sessionId: string; message: string };
         const { sessionId, message } = body;
 
@@ -66,28 +67,36 @@ export default {
           return Response.json({ error: "Missing sessionId or message" }, { status: 400 });
         }
 
-        // Add user message
         const memory = await loadMemory(env, sessionId);
+        console.log("MEMORY LOADED:", JSON.stringify(memory, null, 2));
         memory.conversation.push({ role: "user", content: message });
 
-        // Call AI
         const messages = [
           { role: "system", content: SYSTEM_PROMPT },
           ...memory.conversation
         ];
 
-        const ai = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", { messages });
+        // ⭐ ADDED LOGGING HERE
+        console.log("MESSAGES SENT TO AI:", JSON.stringify(messages, null, 2));
 
-        const reply = (ai as any).response;
+        const ai = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", { messages });
 
-        // Save memory
+        console.log("AI raw response:", ai);
+
+        const reply =
+          (ai as any).response ||
+          (ai as any).result?.response ||
+          (ai as any).result ||
+          (ai as any).output_text ||
+          "I'm here and ready to help!";
+
         memory.conversation.push({ role: "assistant", content: reply });
         await saveMemory(env, sessionId, memory);
 
         return Response.json({ reply });
 
       } catch (error) {
-        console.error(error);
+        console.error("ERROR:", error);
         return Response.json({ error: "Internal server error" }, { status: 500 });
       }
     }
@@ -96,4 +105,4 @@ export default {
   },
 };
 
-
+export { SalesWorkflow };
