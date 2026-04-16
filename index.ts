@@ -1,12 +1,29 @@
+interface Env {
+  SALES_WORKFLOW: Workflow;
+}
+
+interface WorkflowResponse {
+  reply: string;
+}
+
+interface FetchRequest {
+  sessionId: string;
+  message: string;
+}
+
+interface Workflow {
+  create(options: { input: FetchRequest }): Promise<WorkflowResponse>;
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request: Request, env: Env): Promise<Response> {
     if (request.method !== "POST") {
       return new Response("Method Not Allowed", { status: 405 });
     }
 
-    const { sessionId, message } = await request.json();
+    const { sessionId, message }: FetchRequest = await request.json();
 
-    const result = await env.SALES_WORKFLOW.create({
+    const result: WorkflowResponse = await env.SALES_WORKFLOW.create({
       input: { sessionId, message }
     });
 
