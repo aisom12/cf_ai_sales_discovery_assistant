@@ -1,4 +1,4 @@
-name = "cf_ai_sales_discovery_assistant"
+name = "cf-ai-sales-discovery-assistant"
 main = "index.ts"
 compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
