@@ -1,0 +1,16 @@
+name = "cf_ai_sales_discovery_assistant"
+main = "index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[ai]
+binding = "AI"
+remote = true
+
+kv_namespaces = [
+  { binding = "SALES_KV", id = "a3d1f81ec74c45d4ab5d10748f724bc3", preview_id = "1f96478aa3d2490eab7431bf01b27d31" }
+]
+
+workflows = [
+  { binding = "SALES_WORKFLOW", class_name = "SalesWorkflow" }
+]
